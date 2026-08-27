@@ -8,13 +8,18 @@ function(addJuceModule name)
             "${JUCE_SOURCE_DIR}/modules/${name}/*.hpp"
     )
 
+    set(ext "cpp")
+    if (APPLE)
+        set(ext "mm")
+    endif()
+
     target_sources(${name}
         PUBLIC
             FILE_SET HEADERS
             BASE_DIRS ${JUCE_SOURCE_DIR}/modules
             FILES ${headers}
         PRIVATE
-            ${JUCE_SOURCE_DIR}/modules/${name}/${name}.mm
+            ${JUCE_SOURCE_DIR}/modules/${name}/${name}.${ext}
     )
 endfunction()
 
@@ -23,9 +28,9 @@ endfunction()
 function(setupImportedTarget name)
     install(TARGETS ${name} FILE_SET HEADERS)
 
+    get_target_property(includeDirectories ${name} INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(compileDefs ${name} INTERFACE_COMPILE_DEFINITIONS)
     get_target_property(linkLibraries ${name} INTERFACE_LINK_LIBRARIES)
-    get_target_property(includeDirectories ${name} INTERFACE_INCLUDE_DIRECTORIES)
 
 
     set(compileDefsLine "")
@@ -33,6 +38,11 @@ function(setupImportedTarget name)
         string(REPLACE "\"" "\\\"" compileDefinitions "${compileDefs}")
 
         set(compileDefsLine "target_compile_definitions(${name} INTERFACE \"${compileDefinitions}\")")
+    endif ()
+
+    set(linkLibrariesLine "")
+    if (linkLibraries)
+        set(linkLibrariesLine "target_link_libraries(${name} INTERFACE \"${linkLibraries}\")")
     endif ()
 
     file(GENERATE
@@ -43,10 +53,11 @@ add_library(${name} STATIC IMPORTED GLOBAL)
 add_library(juce::${name} ALIAS ${name})
 
 set_target_properties(${name} PROPERTIES
-    IMPORTED_LOCATION \"\${JUCE_ROOT_DIR}/lib/lib${name}.a\"
+    IMPORTED_LOCATION \"\${JUCE_ROOT_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${name}${CMAKE_STATIC_LIBRARY_SUFFIX}\"
     INTERFACE_INCLUDE_DIRECTORIES \"\${JUCE_ROOT_DIR}/include\"
 )
 ${compileDefsLine}
-target_link_libraries(${name} INTERFACE \"${linkLibraries}\")
+${linkLibrariesLine}
+
 ")
 endfunction()

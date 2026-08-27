@@ -8,7 +8,7 @@ set(JUCE_BINARY_DIR ${CMAKE_BINARY_DIR}/JUCE)
 
 add_executable(juceaide IMPORTED GLOBAL)
 set_target_properties(juceaide PROPERTIES
-        IMPORTED_LOCATION "${JUCE_ROOT_DIR}/bin/JUCE-@JUCE_VERSION@/juceaide"
+        IMPORTED_LOCATION "${JUCE_ROOT_DIR}/bin/JUCE-@JUCE_VERSION@/juceaide${CMAKE_EXECUTABLE_SUFFIX}"
 )
 add_executable(juce::juceaide ALIAS juceaide)
 
@@ -27,7 +27,7 @@ include(${JUCE_ROOT_DIR}/share/juce_audio_basics.cmake)
 # This is one that I don't have a solution for yet:
 # import(${JUCE_ROOT_DIR}/share/juce_audio_processors_headless.cmake)
 add_library(juce_audio_processors_headless STATIC IMPORTED GLOBAL)
-set_target_properties(juce_audio_processors_headless PROPERTIES IMPORTED_LOCATION "${JUCE_ROOT_DIR}/lib/libjuce_audio_processors_headless.a")
+set_target_properties(juce_audio_processors_headless PROPERTIES IMPORTED_LOCATION "${JUCE_ROOT_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}juce_audio_processors_headless${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
 # Here the problem is passing this extra include dir to 'setupImportedTarget'
 target_include_directories(juce_audio_processors_headless INTERFACE

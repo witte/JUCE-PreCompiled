@@ -10,13 +10,24 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest]
+        include:
+#          - os: ubuntu-latest
+#            name: linux
+          - os: macos-latest
+            name: mac
+          - os: windows-latest
+            name: windows
 
-    name: Build on ${{ matrix.os }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     
     steps:
       - uses: actions/checkout@v7
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
       
       - name: Configure
         run: cmake . -B__build -GNinja -DCMAKE_BUILD_TYPE=Release
@@ -31,7 +42,7 @@ jobs:
         if: github.ref_type != 'tag'
         uses: actions/upload-artifact@v7
         with:
-          name: ClapWorkbenchSDK-${{ matrix.os }}
+          name: JUCE-PreCompiled-${{ matrix.os }}
           path: "__build/__package/*.tar.gz"
           if-no-files-found: error
 
