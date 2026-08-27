@@ -1,0 +1,11 @@
+# OS's
+.DS_Store
+Thumbs.db
+
+# IDE's
+.idea/*
+cmake-build-*/*
+*.user
+
+# CMake
+__*

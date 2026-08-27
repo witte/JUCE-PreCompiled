@@ -1,0 +1,117 @@
+cmake_minimum_required(VERSION 4.4.0)
+project(JUCE-StaticLibs VERSION @PROJECT_VERSION@)
+
+
+set(JUCE_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(JUCE_SOURCE_DIR ${JUCE_ROOT_DIR}/include)
+set(JUCE_BINARY_DIR ${CMAKE_BINARY_DIR}/JUCE)
+
+add_executable(juceaide IMPORTED GLOBAL)
+set_target_properties(juceaide PROPERTIES
+        IMPORTED_LOCATION "${JUCE_ROOT_DIR}/bin/JUCE-@JUCE_VERSION@/juceaide"
+)
+add_executable(juce::juceaide ALIAS juceaide)
+
+
+include(${JUCE_ROOT_DIR}/extras/Build/CMake/JUCEModuleSupport.cmake)
+include(${JUCE_ROOT_DIR}/extras/Build/CMake/JUCEUtils.cmake)
+
+
+include(${JUCE_ROOT_DIR}/share/juce_core.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_events.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_data_structures.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_audio_basics.cmake)
+
+
+# TODO:
+# This is one that I don't have a solution for yet:
+# import(${JUCE_ROOT_DIR}/share/juce_audio_processors_headless.cmake)
+add_library(juce_audio_processors_headless STATIC IMPORTED GLOBAL)
+set_target_properties(juce_audio_processors_headless PROPERTIES IMPORTED_LOCATION "${JUCE_ROOT_DIR}/lib/libjuce_audio_processors_headless.a")
+
+# Here the problem is passing this extra include dir to 'setupImportedTarget'
+target_include_directories(juce_audio_processors_headless INTERFACE
+        ${JUCE_SOURCE_DIR}/juce_audio_processors_headless/format_types/VST3_SDK
+)
+target_link_libraries(juce_audio_processors_headless INTERFACE juce_events juce_audio_basics)
+if (APPLE)
+    target_link_libraries(juce_audio_processors_headless INTERFACE
+        "-framework CoreAudio"
+        "-framework CoreMIDI"
+        "-framework AudioToolbox")
+endif()
+add_library(juce::juce_audio_processors_headless ALIAS juce_audio_processors_headless)
+
+
+
+include(${JUCE_ROOT_DIR}/share/juce_graphics.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_gui_basics.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_gui_extra.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_audio_processors.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_audio_formats.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_audio_devices.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_audio_utils.cmake)
+include(${JUCE_ROOT_DIR}/share/juce_dsp.cmake)
+
+
+
+# TODO:
+# This is another one that I don't have a solution for yet:
+# TODO: remember why we need this INTERFACE_JUCE_MODULE_PATH and document here
+#
+# we need it because the vst3_helper target uses it to find
+# "[JUCE_DIR]/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.cpp
+add_library(juce_audio_plugin_client INTERFACE)
+set_target_properties(juce_audio_plugin_client
+    PROPERTIES
+        INTERFACE_JUCE_MODULE_PATH "${JUCE_SOURCE_DIR}")
+add_library(juce::juce_audio_plugin_client ALIAS juce_audio_plugin_client)
+
+# These don't really do anything, but in JUCE/Extras/Build/CMake/JUCEUtils.cmake the '_juce_link_plugin_wrapper'
+# function make any plugin created with 'juce_add_plugin' link to them. I didn't want to mess with internal
+# JUCE code, so declaring these targets is a way to keep things working
+add_library(juce_audio_plugin_client_Standalone INTERFACE)
+add_library(juce::juce_audio_plugin_client_Standalone ALIAS juce_audio_plugin_client_Standalone)
+target_sources(juce_audio_plugin_client_Standalone INTERFACE
+        ${JUCE_ROOT_DIR}/include/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp)
+target_compile_definitions(juce_audio_plugin_client_Standalone INTERFACE JucePlugin_Build_Standalone=1)
+
+
+add_library(juce_audio_plugin_client_VST3 INTERFACE)
+add_library(juce::juce_audio_plugin_client_VST3 ALIAS juce_audio_plugin_client_VST3)
+target_sources(juce_audio_plugin_client_VST3 INTERFACE
+        ${JUCE_ROOT_DIR}/include/juce_audio_plugin_client/juce_audio_plugin_client_VST3.mm)
+target_compile_definitions(juce_audio_plugin_client_VST3 INTERFACE JucePlugin_Build_VST3=1)
+target_include_directories(juce_audio_plugin_client_VST3 INTERFACE ${JUCE_ROOT_DIR}/juce_audio_processors_headless/format_types/VST3_SDK)
+
+if (APPLE)
+    add_library(juce_audio_plugin_client_AU INTERFACE)
+    add_library(juce::juce_audio_plugin_client_AU ALIAS juce_audio_plugin_client_AU)
+    target_sources(juce_audio_plugin_client_AU INTERFACE
+            ${JUCE_ROOT_DIR}/include/juce_audio_plugin_client/juce_audio_plugin_client_AU_1.mm
+            ${JUCE_ROOT_DIR}/include/juce_audio_plugin_client/juce_audio_plugin_client_AU_2.mm)
+    target_compile_definitions(juce_audio_plugin_client_AU INTERFACE JucePlugin_Build_AU=1)
+    target_include_directories(juce_audio_plugin_client_AU INTERFACE ${JUCE_ROOT_DIR}/include/juce_audio_plugin_client/AU)
+endif()
+
+
+function(juce_add_plugin2 target)
+    juce_add_plugin(${target} ${ARGN})
+
+    set(_multi_value_args FORMATS)
+    cmake_parse_arguments(_ARG "" "" "${_multi_value_args}" ${ARGN})
+
+    if (APPLE)
+        if ("AU" IN_LIST _ARG_FORMATS AND TARGET ${target}_AU)
+            target_link_libraries(${target}_AU PRIVATE juce::juce_audio_plugin_client_AU)
+        endif()
+    endif ()
+
+    if ("VST3" IN_LIST _ARG_FORMATS AND TARGET ${target}_VST3)
+        target_link_libraries(${target}_VST3 PRIVATE juce::juce_audio_plugin_client_VST3)
+    endif()
+
+    if ("Standalone" IN_LIST _ARG_FORMATS AND TARGET ${target}_Standalone)
+        target_link_libraries(${target}_Standalone PRIVATE juce::juce_audio_plugin_client_Standalone)
+    endif()
+endfunction()
