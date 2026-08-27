@@ -115,3 +115,9 @@ function(juce_add_plugin2 target)
         target_link_libraries(${target}_Standalone PRIVATE juce::juce_audio_plugin_client_Standalone)
     endif()
 endfunction()
+
+
+include(share/pluginval.cmake)
+if (APPLE)
+    include(share/auval.cmake)
+endif()

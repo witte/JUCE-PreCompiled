@@ -70,11 +70,28 @@ setupImportedTarget(juce_dsp)
 #setupImportedTarget(juce_audio_plugin_client)
 
 
+include(cmake/pluginval.cmake)
+
+configure_file(
+    cmake/pluginval.cmake.in
+    ${CMAKE_INSTALL_PREFIX}/share/pluginval.cmake
+    @ONLY
+)
+
+if (APPLE)
+    configure_file(
+            cmake/auval.cmake
+            ${CMAKE_INSTALL_PREFIX}/share/auval.cmake
+            @ONLY
+    )
+endif()
+
 configure_file(
         cmake/CMakeListsImported.txt.in
         ${CMAKE_INSTALL_PREFIX}/CMakeLists.txt
         @ONLY
 )
+
 
 set(ARCHIVE_PATH "${CMAKE_BINARY_DIR}/__package/${PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}.tar.gz")
 add_custom_target(package
