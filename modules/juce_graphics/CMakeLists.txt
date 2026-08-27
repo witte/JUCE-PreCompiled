@@ -18,3 +18,5 @@ if (APPLE)
             "-framework Cocoa"
             "-framework QuartzCore")
 endif()
+
+checkBigObjOnWindows(juce_graphics)

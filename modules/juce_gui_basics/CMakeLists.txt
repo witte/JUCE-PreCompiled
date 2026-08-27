@@ -22,3 +22,5 @@ if (APPLE)
             "-framework MetalKit"
     )
 endif()
+
+checkBigObjOnWindows(juce_gui_basics)

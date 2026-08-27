@@ -26,3 +26,5 @@ if (APPLE)
         "-framework CoreFoundation"
     )
 endif()
+
+checkBigObjOnWindows(juce_core)

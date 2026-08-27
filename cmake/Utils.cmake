@@ -24,6 +24,15 @@ function(addJuceModule name)
 endfunction()
 
 
+function(checkBigObjOnWindows name)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        if ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"))
+            target_compile_options(${name} PUBLIC /bigobj)
+        endif()
+    endif()
+endfunction()
+
+
 
 function(setupImportedTarget name)
     install(TARGETS ${name} FILE_SET HEADERS)

@@ -25,6 +25,8 @@ if (APPLE)
     )
 endif()
 
+checkBigObjOnWindows(juce_audio_processors_headless)
+
 install(
     DIRECTORY
         ${JUCE_SOURCE_DIR}/modules/juce_audio_processors_headless/format_types/VST3_SDK
