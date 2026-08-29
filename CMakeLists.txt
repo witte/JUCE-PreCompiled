@@ -9,8 +9,8 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
-#set(CMAKE_OSX_DEPLOYMENT_TARGET 26.4.1)
+#set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 26.0.0)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
@@ -80,24 +80,24 @@ configure_file(
 
 if (APPLE)
     configure_file(
-            cmake/auval.cmake
-            ${CMAKE_INSTALL_PREFIX}/share/auval.cmake
-            @ONLY
+        cmake/auval.cmake
+        ${CMAKE_INSTALL_PREFIX}/share/auval.cmake
+        @ONLY
     )
 endif()
 
 configure_file(
-        cmake/CMakeListsImported.txt.in
-        ${CMAKE_INSTALL_PREFIX}/CMakeLists.txt
-        @ONLY
+    cmake/CMakeListsImported.txt.in
+    ${CMAKE_INSTALL_PREFIX}/CMakeLists.txt
+    @ONLY
 )
 
 
 set(ARCHIVE_PATH "${CMAKE_BINARY_DIR}/__package/${PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}.tar.gz")
 add_custom_target(package
-        COMMAND ${CMAKE_COMMAND} --install .
-        COMMAND echo "Generating .tar.gz ${ARCHIVE_PATH}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/__package"
-        COMMAND ${CMAKE_COMMAND} -E tar cfz ${ARCHIVE_PATH} --format=gnutar ${CMAKE_INSTALL_PREFIX}
-        USES_TERMINAL
+    COMMAND ${CMAKE_COMMAND} --install .
+    COMMAND echo "Generating .tar.gz ${ARCHIVE_PATH}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/__package"
+    COMMAND ${CMAKE_COMMAND} -E tar cfz ${ARCHIVE_PATH} --format=gnutar ${CMAKE_INSTALL_PREFIX}
+    USES_TERMINAL
 )
